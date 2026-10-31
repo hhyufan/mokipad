@@ -1,0 +1,174 @@
+<Window x:Class="MokiPad.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:services="clr-namespace:MokiPad.Services"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:MokiPad.Models" mc:Ignorable="d"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="MokiPad" Width="1280" Height="820" MinWidth="640" MinHeight="440" WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="CanResize" Background="{DynamicResource Canvas}"
+        Foreground="{DynamicResource Text}" FontFamily="{x:Static services:AppFonts.Body}" FontSize="13"
+        UseLayoutRounding="True" AllowDrop="True" Drop="OnDrop" Closing="OnClosing">
+    <!--
+        自定义窗口标题栏。WindowStyle="None" 去掉了系统边框，
+        WindowChrome 则负责保留拖动、缩放、贴边和最大化等系统行为。
+        CaptionHeight 是“可拖动标题栏”的高度；按钮需要设置
+        WindowChrome.IsHitTestVisibleInChrome="True" 才能收到点击。
+    -->
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="42" ResizeBorderThickness="6" CornerRadius="10" GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+    <!-- DynamicResource：换主题时 WPF 会重新查找同名画刷；StaticResource 只在加载时查一次。 -->
+    <Border BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
+        <Grid x:Name="Root" Background="{DynamicResource Surface}">
+            <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False" Opacity=".15" />
+            <Grid>
+                <!-- 四行：标题栏、标签栏、阅读区（* 表示占满剩余空间）、底部状态栏。 -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42" /><RowDefinition Height="40" /><RowDefinition Height="*" />
+                    <RowDefinition Height="32" />
+                </Grid.RowDefinitions>
+                <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
+                    <Grid Margin="6,0,10,0">
+                        <!-- 标题栏里的按钮必须声明 IsHitTestVisibleInChrome，否则会被当成拖动区域。 -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Button x:Name="FileMenuButton" ToolTip="{DynamicResource L.File}" Click="OnFileMenu"
+                                    Padding="9,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <Viewbox Width="16" Height="16" Margin="0,0,7,0">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="{StaticResource Icon.File}" Stroke="{DynamicResource Text}"
+                                                  StrokeThickness="1.8" StrokeLineJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="{DynamicResource L.File}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource IconButton}" Content="{StaticResource Icon.Open}"
+                                    ToolTip="{DynamicResource L.Open}" Click="OnOpen" Margin="2,0,0,0" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="330">
+                            <TextBlock x:Name="HeaderTitle" Text="MokiPad" FontSize="16" FontWeight="SemiBold"
+                                       TextAlignment="Center" TextTrimming="CharacterEllipsis" Padding="4,1" />
+                            <TextBlock x:Name="HeaderPath" FontSize="11" Foreground="{DynamicResource Secondary}"
+                                       TextTrimming="CharacterEllipsis" TextAlignment="Center" MaxWidth="330"
+                                       Visibility="Collapsed" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Button x:Name="PinButton" Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Pin}" ToolTip="{DynamicResource L.Pin}" Click="OnPin"
+                                    Margin="0,0,4,0" />
+                            <Button Style="{StaticResource IconButton}" Content="{StaticResource Icon.Minimize}"
+                                    ToolTip="{DynamicResource L.Minimize}" Click="OnMinimize" Margin="0,0,4,0" />
+                            <Button Style="{StaticResource IconButton}" Content="{StaticResource Icon.Maximize}"
+                                    ToolTip="{DynamicResource L.Maximize}" Click="OnMaximize" Margin="0,0,4,0" />
+                            <Button Style="{StaticResource IconButton}" Content="{StaticResource Icon.Close}"
+                                    ToolTip="{DynamicResource L.CloseWindow}" Click="OnExit" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
+                    <DockPanel x:Name="TabStrip" LastChildFill="False" Margin="8,0" SizeChanged="OnTabStripSizeChanged">
+                        <ListBox x:Name="Tabs" DockPanel.Dock="Left" SelectionChanged="OnTabSelected"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ItemContainerStyle="{StaticResource DocumentTabItem}" MouseUp="OnTabMouseUp"
+                                 PreviewMouseWheel="OnTabWheel" ContextMenuOpening="OnTabContextMenu">
+                            <ListBox.ContextMenu>
+                                <ContextMenu />
+                            </ListBox.ContextMenu>
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <!--
+                                DataTemplate 决定每个标签数据长什么样。
+                                {Binding Name} 是普通绑定；d:DataContext 只用于设计时/IDE 提示，运行时不生效。
+                            -->
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                d:DataContext="{d:DesignInstance models:DocumentTab}">
+                                        <TextBlock Text="{Binding Name}" FontSize="14" MaxWidth="220"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding FilePath}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Style="{StaticResource IconButton}" Width="22" Height="26"
+                                                FontSize="12" Padding="4" Content="{StaticResource Icon.Close}"
+                                                ToolTip="{DynamicResource L.Close}" Click="OnCloseSpecificTab"
+                                                Margin="8,0,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button DockPanel.Dock="Left" Content="{StaticResource Icon.New}"
+                                ToolTip="{DynamicResource L.Open}" Click="OnOpen" Margin="2,3">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                    <Setter Property="Opacity" Value="0" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=TabStrip}" Value="True">
+                                            <Setter Property="Opacity" Value="1" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Opacity" Value="1" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DockPanel>
+                </Border>
+                <!--
+                    阅读区。PreviewHost 是一个 Border，代码里把 MarkdownPreview 放进它的 Child；
+                    Welcome 是同一格里的欢迎页，打开文件后会被隐藏。
+                -->
+                <Grid Grid.Row="2" PreviewMouseWheel="OnZoomWheel">
+                    <Border x:Name="PreviewHost" Padding="0,12,0,12" />
+                    <StackPanel x:Name="Welcome" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="430"
+                                Margin="28">
+                        <Viewbox Width="42" Height="42" HorizontalAlignment="Center" Margin="0,0,0,18">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{StaticResource Icon.Notebook}" Stroke="{DynamicResource Accent}"
+                                      StrokeThickness="1.4" />
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{DynamicResource L.ReaderWelcome}" FontSize="24" FontWeight="SemiBold"
+                                   TextAlignment="Center" />
+                        <TextBlock Text="{DynamicResource L.ReaderHint}" Foreground="{DynamicResource Secondary}"
+                                   FontSize="13" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,22" />
+                        <Button Content="{DynamicResource L.OpenMarkdown}" ToolTip="{DynamicResource L.Open}"
+                                Click="OnOpen" Foreground="{DynamicResource Accent}"
+                                Background="{DynamicResource MdSoft}" Padding="20,10" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <!-- 底部状态栏：左边按钮，中间状态与路径，右边字数/编码信息。 -->
+                <Border Grid.Row="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+                    <Grid Margin="10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="ThemeButton" Style="{StaticResource IconButton}" Height="28" Padding="4"
+                                    Content="{StaticResource Icon.Theme}" ToolTip="{DynamicResource L.Theme}"
+                                    Click="OnTheme" />
+                            <Button Style="{StaticResource IconButton}" Height="28" Padding="4"
+                                    Content="{StaticResource Icon.Gear}" ToolTip="{DynamicResource L.Settings}"
+                                    Click="OnSettings" />
+                        </StackPanel>
+                        <TextBlock x:Name="Status" Grid.Column="1" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Secondary}" FontSize="11" Margin="14,0" />
+                        <TextBlock x:Name="PathText" Grid.Column="2" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Secondary}" FontSize="11"
+                                   TextTrimming="CharacterEllipsis" Margin="8,0" />
+                        <TextBlock x:Name="DocumentInfo" Grid.Column="3" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Secondary}" FontSize="11" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
