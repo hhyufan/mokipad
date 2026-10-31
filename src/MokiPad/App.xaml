@@ -1,0 +1,15 @@
+<Application x:Class="MokiPad.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        WPF 的资源字典：把样式、画刷、图标模板集中放这里，后面的窗口就能用
+        StaticResource（一次查找）或 DynamicResource（换主题时重新查找）来引用。
+    -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- MergedDictionaries 用来把拆分的 xaml 资源文件合并进全局资源。 -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
