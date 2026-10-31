@@ -2,7 +2,8 @@
 
 > 写给第一次接触 C#、第一次打开 WPF 项目的人。  
 > 不要求你会写代码，只要求你愿意按顺序动手。  
-> 配套知识树：`docs/beginner-guide.mgtree`，可以用 MokiDown 打开，按章节跳转。
+> 配套知识树：`docs/beginner-guide.mgtree`，可以用 MokiDown 打开，按章节跳转。  
+> 想看“完整文件架构 → 功能模块 → 逐行代码”，转到 `docs/code-walkthrough.md`。
 
 ## 怎么读这份文档
 
