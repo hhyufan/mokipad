@@ -14,6 +14,8 @@ MokiDown 的原生 Windows Markdown 阅读器。沿用 MokiDown 的蓝色、明�
 
 想按“完整文件架构 → 功能模块 → 逐行代码”的顺序读实现，见 [docs/code-walkthrough.md](docs/code-walkthrough.md)，配套知识树是 [docs/code-walkthrough.mgtree](docs/code-walkthrough.mgtree)。
 
+每个模块的代码行后面都带中文注释的版本，见 [docs/code-annotated.md](docs/code-annotated.md)，配套知识树是 [docs/code-annotated.mgtree](docs/code-annotated.mgtree)。
+
 ## 运行
 
 需要 Windows 10/11 与 .NET 10 SDK。可用 Visual Studio 或 Rider 打开 `MokiPad.sln`（新版 IDE 也支持 `MokiPad.slnx`），或在项目目录执行：
