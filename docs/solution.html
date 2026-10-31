@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MokiPad 解决方案说明</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --panel:#ffffff; --ink:#1c2030; --muted:#5b6273; --line:#e2e6ef;
+    --accent:#3f8cff; --accent2:#7aa7ff; --soft:#eaf2ff; --code:#f2f4f9;
+    --ok:#1f9d63; --warn:#b26a00; --warnbg:#fff5e2; --bad:#c2384a; --shadow:0 10px 30px rgba(28,32,48,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14161c; --panel:#1c1f27; --ink:#eef1f7; --muted:#a3aab9; --line:#2c313d;
+      --accent:#5a9dff; --accent2:#8bb4ff; --soft:#1e2a3f; --code:#22262f;
+      --ok:#4ccb8b; --warn:#e0a33a; --warnbg:#3a2c14; --bad:#ff7a8a; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.7 "Segoe UI","Microsoft YaHei UI",system-ui,-apple-system,sans-serif;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,pre{font-family:"Cascadia Code",Consolas,"Courier New",monospace}
+  code{background:var(--code);padding:.12em .42em;border-radius:5px;font-size:.92em}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 72px}
+  header.hero{background:linear-gradient(135deg,#3f8cff 0%,#6aa8ff 45%,#8fc0ff 100%);
+    color:#fff;padding:52px 22px 40px;margin-bottom:22px}
+  .hero-inner{max-width:1080px;margin:0 auto}
+  .eyebrow{letter-spacing:.18em;font-size:12px;text-transform:uppercase;opacity:.85;margin:0 0 10px}
+  h1{margin:0;font-size:40px;line-height:1.15;font-weight:700}
+  .sub{margin:10px 0 20px;font-size:17px;opacity:.95}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    border-radius:999px;padding:4px 12px;font-size:12.5px;backdrop-filter:blur(4px)}
+  nav.toc{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);margin-bottom:26px}
+  nav.toc ul{max-width:1080px;margin:0 auto;padding:10px 22px;list-style:none;display:flex;gap:18px;
+    overflow-x:auto;font-size:13.5px;white-space:nowrap}
+  nav.toc a{color:var(--muted)}
+  nav.toc a:hover{color:var(--accent)}
+  section{margin:34px 0 0}
+  h2{font-size:23px;margin:0 0 14px}
+  h2 .num{display:inline-block;vertical-align:middle;margin-right:10px;font-size:13px;color:var(--accent);background:var(--soft);border-radius:8px;padding:2px 8px;font-weight:600}
+  h3{font-size:17px;margin:22px 0 8px}
+  p{margin:0 0 12px}
+  .muted{color:var(--muted)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:16px}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+  @media (max-width:860px){.grid.cols-3,.grid.cols-2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 4px;font-size:18px}
+  .card .path{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .badge{font-size:11.5px;border-radius:6px;padding:2px 8px;background:var(--soft);color:var(--accent)}
+  .badge.gray{background:var(--code);color:var(--muted)}
+  dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13.5px}
+  dl.kv dt{color:var(--muted)}
+  dl.kv dd{margin:0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;letter-spacing:.03em}
+  tr:last-child td{border-bottom:0}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  pre.tree{background:var(--code);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+    overflow:auto;font-size:13px;line-height:1.65;margin:0}
+  pre.tree .dim{color:var(--muted)}
+  .callout{border-left:3px solid var(--accent);background:var(--soft);border-radius:0 10px 10px 0;
+    padding:12px 16px;font-size:13.5px;margin:14px 0}
+  .warn{border-left-color:var(--warn);background:var(--warnbg)}
+  .bar{height:10px;border-radius:6px;background:var(--code);overflow:hidden;display:flex}
+  .bar span{display:block;height:100%}
+  .bar .w{background:#e0a33a}.bar .s{background:#7aa7ff}.bar .e{background:#c2384a}
+  .legend{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin-top:6px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:860px){.figs{grid-template-columns:1fr}}
+  figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  figure img{display:block;width:100%;height:auto}
+  figcaption{padding:10px 14px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
+  .svg-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+  .node{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+  .node-accent{fill:var(--soft);stroke:var(--accent);stroke-width:1.8}
+  .node-title{fill:var(--ink);font:600 15px "Segoe UI","Microsoft YaHei UI",sans-serif}
+  .node-sub{fill:var(--muted);font:12px "Segoe UI","Microsoft YaHei UI",sans-serif}
+  .edge{stroke:var(--muted);stroke-width:2;fill:none;marker-end:url(#arrow)}
+  .edge-label{fill:var(--muted);font:11.5px "Segoe UI","Microsoft YaHei UI",sans-serif}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  .mono{font-family:"Cascadia Code",Consolas,monospace}
+  @media print{
+    nav.toc{display:none}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .panel,.card,figure,.svg-wrap{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Solution Documentation</p>
+    <h1>MokiPad</h1>
+    <p class="sub">专注 Markdown 阅读的原生 Windows 阅读器 · 解决方案说明与代码检查报告</p>
+    <div class="chips">
+      <span class="chip">.NET 10 · WPF</span>
+      <span class="chip">MokiPad.sln</span>
+      <span class="chip">3 个项目</span>
+      <span class="chip">InspectCode 2026.2.3.1</span>
+      <span class="chip">生成于 2026-10-30</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#structure">解决方案结构</a></li>
+    <li><a href="#projects">项目明细</a></li>
+    <li><a href="#dependencies">依赖关系</a></li>
+    <li><a href="#inspection">代码检查</a></li>
+    <li><a href="#build">构建与运行</a></li>
+    <li><a href="#artifacts">产物与截图</a></li>
+    <li><a href="#architecture">架构要点</a></li>
+    <li><a href="#limits">已知限制</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+
+<section id="overview">
+  <h2><span class="num">01</span>概览</h2>
+  <div class="panel">
+    <p>MokiPad 是一个只读的本地 Markdown 阅读器：Windows 原生 WPF，无编辑器、无联网依赖，专注长文阅读。它沿用 MokiDown 的明暗配色、圆角与星光书页背景，支持公式、图片、SVG、GIF、表格、脚注、链接跳转与安全子集 HTML。</p>
+    <div class="grid cols-3" style="margin-top:16px">
+      <div class="card">
+        <h3>解决方案</h3>
+        <div class="path mono">MokiPad.sln</div>
+        <dl class="kv">
+          <dt>项目</dt><dd>3 个（2 个 src / 1 个 tests）</dd>
+          <dt>配置</dt><dd>Debug · Release / Any CPU</dd>
+          <dt>SDK</dt><dd>.NET 10（global.json 固定 10.0.100，rollForward）</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>代码规模</h3>
+        <dl class="kv">
+          <dt>MokiPad</dt><dd>16 个 .cs/.xaml · 1,789 行</dd>
+          <dt>MokiPad.Core</dt><dd>3 个 .cs · 302 行</dd>
+          <dt>Verification</dt><dd>1 个 .cs · 316 行</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>检查结果</h3>
+        <dl class="kv">
+          <dt>问题总数</dt><dd><strong>0</strong>（0 error / 0 warning）</dd>
+          <dt>WARNING</dt><dd>0</dd>
+          <dt>SUGGESTION</dt><dd>0</dd>
+          <dt>HINT</dt><dd>0</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="structure">
+  <h2><span class="num">02</span>解决方案结构</h2>
+  <p class="muted">结构读取自 MokiPad.sln 与各项目文件；解决方案文件夹 <code>src</code>、<code>tests</code> 仅用于 IDE 分组。</p>
+  <pre class="tree">MokiPad.sln
+├─ src
+│  ├─ MokiPad  <span class="dim">WinExe · net10.0-windows · WPF 启动项目</span>
+│  │  ├─ App.xaml / App.xaml.cs
+│  │  ├─ MainWindow.xaml / MainWindow.xaml.cs
+│  │  ├─ Controls/   GifAnimation.cs · HtmlBlocks.cs · ImageLoader.cs · MarkdownPreview.cs
+│  │  ├─ Rendering/  MathView.cs
+│  │  ├─ Models/     DocumentTab.cs
+│  │  ├─ Services/   Motion.cs · Preferences.cs · ThemeService.cs · UiText.cs
+│  │  ├─ Styles/     Controls.xaml
+│  │  └─ Assets/     app.ico · moki-icon.png · starlight.png
+│  └─ MokiPad.Core  <span class="dim">Library · net10.0</span>
+│     ├─ MarkdownEngine.cs
+│     ├─ FileService.cs
+│     └─ CodeSyntax.cs
+└─ tests
+   └─ MokiPad.Verification  <span class="dim">Exe · net10.0-windows · 离屏验证</span>
+      └─ Program.cs</pre>
+</section>
+
+<section id="projects">
+  <h2><span class="num">03</span>项目明细</h2>
+  <div class="grid cols-3">
+    <div class="card">
+      <h3>MokiPad</h3>
+      <div class="path mono">src\MokiPad\MokiPad.csproj</div>
+      <div class="badges">
+        <span class="badge">WinExe</span><span class="badge">net10.0-windows</span>
+        <span class="badge gray">UseWPF</span><span class="badge gray">v0.1.0</span>
+      </div>
+      <p class="muted">WPF 窗口、阅读界面、渲染组件、主题与本地偏好。</p>
+      <dl class="kv">
+        <dt>引用</dt><dd>MokiPad.Core</dd>
+        <dt>NuGet</dt><dd>WpfMath 2.1.0<br>SharpVectors.Wpf 1.8.6</dd>
+        <dt>图标</dt><dd>Assets\app.ico</dd>
+        <dt>GUID</dt><dd class="mono">8F6DEAA4-…-EC54F2F4ECDE</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>MokiPad.Core</h3>
+      <div class="path mono">src\MokiPad.Core\MokiPad.Core.csproj</div>
+      <div class="badges">
+        <span class="badge">Library</span><span class="badge">net10.0</span>
+        <span class="badge gray">无 WPF 依赖</span>
+      </div>
+      <p class="muted">Markdown 解析（Markdig）、编码识别、原子保存辅助与词法着色。</p>
+      <dl class="kv">
+        <dt>引用</dt><dd>Markdig 1.5.1</dd>
+        <dt>被引用</dt><dd>MokiPad</dd>
+        <dt>GUID</dt><dd class="mono">F6DA541E-…-EC54F2F4ECDE</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>MokiPad.Verification</h3>
+      <div class="path mono">tests\MokiPad.Verification\MokiPad.Verification.csproj</div>
+      <div class="badges">
+        <span class="badge">Exe</span><span class="badge">net10.0-windows</span>
+        <span class="badge gray">UseWPF</span>
+      </div>
+      <p class="muted">不打开实体窗口的离屏验证：组件画廊、主题图标、长文虚拟化、编码往返。</p>
+      <dl class="kv">
+        <dt>引用</dt><dd>MokiPad</dd>
+        <dt>入口</dt><dd class="mono">Program.cs</dd>
+        <dt>GUID</dt><dd class="mono">599482A7-…-DE9AFA8D993B</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h3>解决方案配置</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>配置</th><th>平台</th><th>用途</th><th>映射</th></tr></thead>
+      <tbody>
+        <tr><td>Debug</td><td>Any CPU</td><td>日常开发、断点调试</td><td>各项目 Debug · Any CPU · Build</td></tr>
+        <tr><td>Release</td><td>Any CPU</td><td>发布、验证（scripts\publish.ps1）</td><td>各项目 Release · Any CPU · Build</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="dependencies">
+  <h2><span class="num">04</span>依赖关系</h2>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 900 250" width="100%" role="img" aria-label="项目与包依赖图">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+        </marker>
+      </defs>
+      <rect class="node node-accent" x="30" y="60" width="230" height="78" rx="12"/>
+      <text class="node-title" x="50" y="92">MokiPad.Verification</text>
+      <text class="node-sub" x="50" y="114">tests · 离屏验证</text>
+
+      <rect class="node node-accent" x="335" y="60" width="230" height="78" rx="12"/>
+      <text class="node-title" x="355" y="92">MokiPad</text>
+      <text class="node-sub" x="355" y="114">WinExe · WPF 阅读器</text>
+
+      <rect class="node" x="640" y="60" width="230" height="78" rx="12"/>
+      <text class="node-title" x="660" y="92">MokiPad.Core</text>
+      <text class="node-sub" x="660" y="114">Library · 解析与编码</text>
+
+      <line class="edge" x1="262" y1="99" x2="330" y2="99"/>
+      <line class="edge" x1="567" y1="99" x2="635" y2="99"/>
+      <text class="edge-label" x="262" y="90">ProjectReference</text>
+      <text class="edge-label" x="567" y="90">ProjectReference</text>
+
+      <text class="edge-label" x="262" y="160">传递引用（MokiPad → Core）</text>
+      <path class="edge" d="M145,140 C145,215 760,215 755,142" stroke-dasharray="6 5"/>
+
+      <text class="node-sub" x="30" y="30">NuGet：WpfMath 2.1.0 · SharpVectors.Wpf 1.8.6 → MokiPad　|　Markdig 1.5.1 → MokiPad.Core</text>
+    </svg>
+  </div>
+  <div class="callout">MokiPad 通过项目引用继承 Core 的 Markdig 依赖；WpfMath 与 SharpVectors 只在 WPF 层使用，Core 保持无 UI 依赖。</div>
+</section>
+
+<section id="inspection">
+  <h2><span class="num">05</span>代码检查（InspectCode）</h2>
+  <div class="panel">
+    <p>检查由 JetBrains ReSharper 命令行工具 <code>InspectCode 2026.2.3.1</code> 完成，基于 <code>MokiPad.sln</code> 构建后分析全部三个项目。Rider 自带的 <code>inspect.bat</code> 与正在运行的 Rider 实例互斥（一次只能运行一个实例），因此使用同引擎的独立命令行工具。</p>
+    <pre class="tree"><span class="dim"># 安装并运行（本机）</span>
+dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2026.2.3.1
+jb inspectcode MokiPad.sln --output=artifacts\inspectcode.xml --format=Xml --absolute-paths
+jb inspectcode MokiPad.sln --output=artifacts\inspectcode.html --format=Html --absolute-paths</pre>
+
+    <div class="grid cols-3" style="margin-top:16px">
+      <div class="card">
+        <h3>0</h3>
+        <p class="muted" style="margin:0">问题总数（0 error / 0 warning）</p>
+        <div class="bar" style="margin-top:10px"><span class="ok" style="width:100%"></span></div>
+        <div class="legend"><span><i class="dot" style="background:#1f9d63"></i>全部通过</span></div>
+      </div>
+      <div class="card">
+        <h3>按项目</h3>
+        <dl class="kv">
+          <dt>MokiPad</dt><dd>0</dd>
+          <dt>MokiPad.Verification</dt><dd>0</dd>
+          <dt>MokiPad.Core</dt><dd>0</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>基线</h3>
+        <dl class="kv">
+          <dt>起始问题</dt><dd>155</dd>
+          <dt>构建</dt><dd>0 warning / 0 error</dd>
+          <dt>验证套件</dt><dd>全部 PASS</dd>
+        </dl>
+      </div>
+    </div>
+
+    <h3>清理内容</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>批次</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>警告</td><td>命名、可空性、异步 lambda、重复基类、未使用成员/using、XAML 设计时绑定</td></tr>
+          <tr><td>ReSharper Full Cleanup</td><td>统一格式、尾逗号、显式 <code>new()</code>、括号与静态限定符</td></tr>
+          <tr><td>语义改写</td><td>模式匹配、空传播、switch、提前返回、本地函数位置、异步/await using</td></tr>
+          <tr><td>可见性/不可变</td><td>收紧 private、<code>init</code>、<code>readonly</code>、主构造函数、集合表达式</td></tr>
+          <tr><td>Rider 复查</td><td>修复生成正则导致的 IDE 误报、区域设置、SHA1、异常类型等 15 条问题</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>本轮已清理的告警</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>位置</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">App.xaml.cs</td><td>去掉重复基类；<code>async void</code> 改为 <code>async Task</code> + 丢弃调用，异常可观察</td></tr>
+          <tr><td class="mono">MarkdownPreview.cs</td><td>空引用改为模式匹配/条件访问；<code>Application.Current</code> 走显式宿主检查；内联图片加载提取为异步方法</td></tr>
+          <tr><td class="mono">MainWindow.xaml(.cs)</td><td>移除多余 using 与重复基类；XAML 补设计时 DataContext、Grid.Column，删除与样式重复的属性</td></tr>
+          <tr><td class="mono">Core / Verification</td><td>移除未使用的 <code>OutlineEntry</code>、<code>LoadedFile.Bytes</code>；命名空间与数组写法规范化</td></tr>
+          <tr><td class="mono">命名规则</td><td>通过 <code>MokiPad.sln.DotSettings</code> 将私有字段约定设为项目现有的 camelCase</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">InspectCode 与 Rider 复查均为 <strong>0 error / 0 warning / 0 suggestion / 0 hint</strong>。逐条处理记录、原因和完整 diff 见 <a href="code-quality-report.html">code-quality-report.html</a>；原始报告见 <a href="../artifacts/inspectcode.html">inspectcode.html</a> 与 <a href="../artifacts/inspectcode.xml">inspectcode.xml</a>。</div>
+  </div>
+</section>
+
+<section id="build">
+  <h2><span class="num">06</span>构建与运行</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>目的</th><th>命令</th><th>输出</th></tr></thead>
+      <tbody>
+        <tr><td>还原 / 构建</td><td><code>dotnet build MokiPad.sln -c Release</code></td><td>各项目 bin\Release</td></tr>
+        <tr><td>运行</td><td><code>.\scripts\dev.ps1 "C:\Notes\长文.md"</code></td><td>WPF 窗口</td></tr>
+        <tr><td>发布</td><td><code>.\scripts\publish.ps1</code></td><td><code>artifacts\app\MokiPad.exe</code></td></tr>
+        <tr><td>自包含发布</td><td><code>.\scripts\publish.ps1 -SelfContained</code></td><td>携带 .NET 运行时</td></tr>
+        <tr><td>离屏验证</td><td><code>.\scripts\verify.ps1</code></td><td><code>artifacts\verification.json</code> + 截图</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout">依赖：Windows 10/11、.NET 10 SDK；发布产物需要 .NET 10 Desktop Runtime（自包含版本除外）。Rider / Visual Studio 可直接打开 <code>MokiPad.sln</code>。</div>
+</section>
+
+<section id="artifacts">
+  <h2><span class="num">07</span>产物与截图</h2>
+  <div class="figs">
+    <figure>
+      <img src="images/reader-light.png" alt="浅色阅读界面" loading="lazy">
+      <figcaption>浅色主题阅读界面：标签页、标题与路径、长文虚拟化预览。</figcaption>
+    </figure>
+    <figure>
+      <img src="images/readme-tables.png" alt="MokiDown README 的表格渲染" loading="lazy">
+      <figcaption>MokiDown README 实测：表格单元格图片、列对齐与 Markdown 内联内容。</figcaption>
+    </figure>
+  </div>
+  <div class="table-wrap" style="margin-top:16px">
+    <table>
+      <thead><tr><th>路径</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">artifacts\app\MokiPad.exe</td><td>发布产物（win-x64，ReadyToRun）</td></tr>
+        <tr><td class="mono">artifacts\verification.json</td><td>离屏验证指标与通过项</td></tr>
+        <tr><td class="mono">artifacts\inspectcode.html</td><td>InspectCode 原生 HTML 报告</td></tr>
+        <tr><td class="mono">artifacts\inspectcode.xml</td><td>InspectCode 原始 XML 结果</td></tr>
+        <tr><td class="mono">docs\images\*.png</td><td>README 与本文档引用的截图</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="architecture">
+  <h2><span class="num">08</span>架构要点</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>解析与模型</h3><p class="muted">Core 用 Markdig 解析 GFM、数学公式、脚注与原始 HTML，输出与 UI 无关的 <code>PreviewBlock</code> 列表；行偏移、锚点、单元格内联树在解析阶段确定。</p></div>
+    <div class="card"><h3>虚拟化阅读</h3><p class="muted">预览是一个可回收的 <code>ListBox</code>（VirtualizingStackPanel），每个块由 <code>BlockPresenter</code> 按需创建，20 MiB 文档仅实例化个位数容器。</p></div>
+    <div class="card"><h3>公式</h3><p class="muted">行内/块级 TeX 由 WpfMath（XAML-Math）排版，<code>MathView</code> 仅负责主题色与尺寸；独占段落的 <code>$$…$$</code> 自动按块级居中。</p></div>
+    <div class="card"><h3>图片</h3><p class="muted">统一 <code>ImageLoader</code>：本地/远程/data URI，远程磁盘缓存；SVG 用 SharpVectors 渲染（内嵌 logo 的嵌套 SVG 会被内联）；GIF 流式解码 + 双缓冲合成。</p></div>
+    <div class="card"><h3>HTML 子集</h3><p class="muted">块级解析 p/div/center/h1–h6/li/pre/hr，保留 align 与 width/height；脚本与样式内容丢弃；链接、图片与数学仍走同一内联渲染管线。</p></div>
+    <div class="card"><h3>本地偏好</h3><p class="muted">主题、语言、背景与字号保存在 <code>%LocalAppData%\MokiPad\preferences.json</code>；窗口关闭时原子写入。</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <h2><span class="num">09</span>已知限制</h2>
+  <div class="panel">
+    <ul style="margin:0;padding-left:20px">
+      <li>无编辑器：只读打开，不提供保存/另存为。</li>
+      <li>Mermaid 图表未实现（需要单独的渲染器）。</li>
+      <li>HTML 为安全子集，脚本、样式与未知标签不会被解释。</li>
+      <li>超大 GIF 会周期性重建解码器以限制内存，帧率受合成成本限制。</li>
+      <li>远程图片首次加载依赖网络；之后命中本地磁盘缓存。</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <p>本文档由 <code>MokiPad.sln</code>、三个项目文件与 InspectCode 2026.2.3.1 的实际检查结果生成 · 2026-10-30 · 工作目录 <code>C:\Code\React\mokipad</code></p>
+</footer>
+
+</div>
+</body>
+</html>
