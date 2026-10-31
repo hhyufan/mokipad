@@ -1,6 +1,12 @@
 MokiPad 逐行注释版代码导读
   1. 完整文件架构
   2. 功能模块表
+  2.5 界面层：XAML 怎么画，怎么和 C# 对应
+    App.xaml 全局资源 >xml[1]
+    MainWindow.xaml 窗口骨架 >xml[2]
+    Styles/Controls.xaml 控件模板 >xml[3]
+    XAML 和 C# 怎么对上
+    这个项目算 MVVM 吗
   3. 启动与窗口
     App 入口 >csharp[1]
     主窗口构造 >csharp[2]
