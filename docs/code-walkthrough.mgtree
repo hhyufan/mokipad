@@ -1,0 +1,50 @@
+MokiPad 代码导读：文件架构、功能模块与逐行实现
+  0. 阅读约定
+  1. 完整文件架构
+  2. 功能模块总览
+  3. 模块逐行讲解
+    3.1 应用启动与窗口壳
+      App 入口 >csharp[1]
+      主窗口构造函数 >csharp[2]
+      打开文件 >csharp[3]
+      解析并显示 >csharp[4]
+      把块交给阅读器 >csharp[5]
+    3.2 文件读取与编码
+      FileService.ReadAsync >csharp[6]
+    3.3 Markdown 解析
+      MarkdownPipeline 与 Parse >csharp[7]
+      块分发 >csharp[8]
+      锚点与纯文本 >csharp[9]
+    3.4 阅读列表与滚动
+      虚拟化配置 >csharp[10]
+      滚轮与方向 >csharp[11]
+      每帧推进 >csharp[12]
+      跳转与高亮 >csharp[13]
+    3.5 块渲染
+      Render 总览 >csharp[14]
+      标题分支 >csharp[15]
+      代码块 >csharp[16]
+      表格 >csharp[17]
+    3.6 HTML 行内
+      AddText >csharp[18]
+      ApplyTag >csharp[19]
+    3.7 图片与 SVG
+      LoadAsync >csharp[20]
+      DecodeBitmap >csharp[21]
+    3.8 GIF 播放
+      DecodeAsync >csharp[22]
+    3.9 数学公式
+      Rebuild >csharp[23]
+    3.10 选择与复制
+      Selection >csharp[24]
+    3.11 主题、样式与字体
+      ThemeService.Apply >csharp[25]
+    3.12 设置与本地化
+      Preferences.Load >csharp[26]
+    3.13 菜单、快捷键、背景
+      BindKeys >csharp[27]
+    3.14 验证
+      运行验证 >powershell[1]
+  4. 功能到文件速查
+  5. 建议的阅读顺序
+  6. 和 mgtree 的对应
