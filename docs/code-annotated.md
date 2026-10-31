@@ -107,6 +107,358 @@ mokipad/
 
 ---
 
+## 2.5 界面层：XAML 怎么画，怎么和 C# 对应
+
+前面讲的是“功能代码”。这一节补上 **V（View）**：界面到底怎么用 XAML 画出来，XAML 里的名字、事件、绑定又是怎么落到 C# 的。
+
+### 2.5.1 App.xaml：全局资源入口
+
+```xml
+<!-- 应用根元素；x:Class 指向 App.xaml.cs -->
+<Application x:Class="MokiPad.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 应用级资源：所有窗口都能用 -->
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <!-- 把 Styles/Controls.xaml 合并进来 -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+```
+
+| 行/属性 | 含义 |
+| --- | --- |
+| `<Application>` | 整个 WPF 应用的根；一个应用只有一个 |
+| `x:Class="MokiPad.App"` | 这个 XAML 对应 `App.xaml.cs` 里的 `App` 类 |
+| `xmlns` | WPF 控件命名空间；不写前缀的标签都从这里找 |
+| `xmlns:x` | XAML 语言命名空间；`x:Class`、`x:Key` 来自这里 |
+| `<Application.Resources>` | 应用级资源字典 |
+| `MergedDictionaries` | 把多个资源文件合并成一个 |
+| `Source="Styles/Controls.xaml"` | 引入全局样式、图标、控件模板 |
+
+### 2.5.2 MainWindow.xaml：窗口骨架
+
+```xml
+<!-- 窗口根：x:Class 指向 MainWindow.xaml.cs -->
+<Window x:Class="MokiPad.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="clr-namespace:MokiPad.Services"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="MokiPad" Width="1280" Height="820"
+        WindowStyle="None" ResizeMode="CanResize"
+        Background="{DynamicResource Canvas}"
+        AllowDrop="True" Drop="OnDrop" Closing="OnClosing">
+
+    <!-- 自定义标题栏：去掉系统边框，但保留拖动/缩放/贴边 -->
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="42" ResizeBorderThickness="6"
+                            CornerRadius="10" GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <!-- 根边框：圆角 + 主题边框色 -->
+    <Border BorderBrush="{DynamicResource Border}" BorderThickness="1"
+            CornerRadius="10" ClipToBounds="True">
+        <Grid x:Name="Root" Background="{DynamicResource Surface}">
+
+            <!-- 背景图：不参与命中测试，透明度 0.15 -->
+            <Image x:Name="Wallpaper" Stretch="UniformToFill"
+                   IsHitTestVisible="False" Opacity=".15" />
+
+            <Grid>
+                <!-- 四行：标题栏 42、标签栏 40、阅读区 *、状态栏 32 -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42" />
+                    <RowDefinition Height="40" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="32" />
+                </Grid.RowDefinitions>
+
+                <!-- 第 0 行：标题栏 -->
+                <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
+                    <Grid Margin="6,0,10,0">
+
+                        <!-- 左侧：文件菜单、打开按钮；必须能接收点击 -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Button x:Name="FileMenuButton" Click="OnFileMenu"
+                                    ToolTip="{DynamicResource L.File}" Padding="9,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <Viewbox Width="16" Height="16" Margin="0,0,7,0">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="{StaticResource Icon.File}"
+                                                  Stroke="{DynamicResource Text}"
+                                                  StrokeThickness="1.8" />
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="{DynamicResource L.File}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Open}"
+                                    ToolTip="{DynamicResource L.Open}"
+                                    Click="OnOpen" Margin="2,0,0,0" />
+                        </StackPanel>
+
+                        <!-- 中间：文件名 + 路径，两者都由代码后置更新 -->
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    MaxWidth="330">
+                            <TextBlock x:Name="HeaderTitle" Text="MokiPad"
+                                       FontSize="16" FontWeight="SemiBold"
+                                       TextAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="HeaderPath" FontSize="11"
+                                       Foreground="{DynamicResource Secondary}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Visibility="Collapsed" />
+                        </StackPanel>
+
+                        <!-- 右侧：置顶、最小化、最大化、关闭 -->
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Button x:Name="PinButton" Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Pin}"
+                                    ToolTip="{DynamicResource L.Pin}" Click="OnPin" />
+                            <Button Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Minimize}"
+                                    ToolTip="{DynamicResource L.Minimize}" Click="OnMinimize" />
+                            <Button Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Maximize}"
+                                    ToolTip="{DynamicResource L.Maximize}" Click="OnMaximize" />
+                            <Button Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Close}"
+                                    ToolTip="{DynamicResource L.CloseWindow}" Click="OnExit" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 第 1 行：标签栏 -->
+                <Border Grid.Row="1" BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,0,0,1">
+                    <DockPanel x:Name="TabStrip" LastChildFill="False"
+                               Margin="8,0" SizeChanged="OnTabStripSizeChanged">
+
+                        <!-- 标签列表：横向排列，绑定 DocumentTab -->
+                        <ListBox x:Name="Tabs" DockPanel.Dock="Left"
+                                 SelectionChanged="OnTabSelected"
+                                 ItemContainerStyle="{StaticResource DocumentTabItem}"
+                                 MouseUp="OnTabMouseUp"
+                                 PreviewMouseWheel="OnTabWheel"
+                                 ContextMenuOpening="OnTabContextMenu">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <!-- 每个标签长什么样：文件名 + 关闭按钮 -->
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Name}" FontSize="14"
+                                                   MaxWidth="220"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding FilePath}" />
+                                        <Button Style="{StaticResource IconButton}"
+                                                Content="{StaticResource Icon.Close}"
+                                                ToolTip="{DynamicResource L.Close}"
+                                                Click="OnCloseSpecificTab" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- 标签栏末尾的“新建/打开”按钮，悬停时才显示 -->
+                        <Button DockPanel.Dock="Left"
+                                Content="{StaticResource Icon.New}"
+                                ToolTip="{DynamicResource L.Open}"
+                                Click="OnOpen" Margin="2,3">
+                            <Button.Style>
+                                <Style TargetType="Button"
+                                       BasedOn="{StaticResource IconButton}">
+                                    <Setter Property="Opacity" Value="0" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=TabStrip}"
+                                                     Value="True">
+                                            <Setter Property="Opacity" Value="1" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DockPanel>
+                </Border>
+
+                <!-- 第 2 行：阅读区。PreviewHost 是空边框，代码把阅读器放进去 -->
+                <Grid Grid.Row="2" PreviewMouseWheel="OnZoomWheel">
+                    <Border x:Name="PreviewHost" Padding="0,12,0,12" />
+
+                    <!-- 欢迎页：打开文件后隐藏 -->
+                    <StackPanel x:Name="Welcome" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" MaxWidth="430" Margin="28">
+                        <Viewbox Width="42" Height="42" HorizontalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{StaticResource Icon.Notebook}"
+                                      Stroke="{DynamicResource Accent}"
+                                      StrokeThickness="1.4" />
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{DynamicResource L.ReaderWelcome}"
+                                   FontSize="24" FontWeight="SemiBold"
+                                   TextAlignment="Center" />
+                        <TextBlock Text="{DynamicResource L.ReaderHint}"
+                                   Foreground="{DynamicResource Secondary}"
+                                   FontSize="13" TextWrapping="Wrap"
+                                   TextAlignment="Center" Margin="0,12,0,22" />
+                        <Button Content="{DynamicResource L.OpenMarkdown}"
+                                Click="OnOpen"
+                                Foreground="{DynamicResource Accent}"
+                                Background="{DynamicResource MdSoft}"
+                                Padding="20,10" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 第 3 行：底部状态栏 -->
+                <Border Grid.Row="3" BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 左：主题、设置 -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="ThemeButton" Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Theme}"
+                                    ToolTip="{DynamicResource L.Theme}" Click="OnTheme" />
+                            <Button Style="{StaticResource IconButton}"
+                                    Content="{StaticResource Icon.Gear}"
+                                    ToolTip="{DynamicResource L.Settings}" Click="OnSettings" />
+                        </StackPanel>
+
+                        <!-- 中：状态、路径；右：字数/编码 -->
+                        <TextBlock x:Name="Status" Grid.Column="1"
+                                   Foreground="{DynamicResource Secondary}"
+                                   FontSize="11" Margin="14,0" />
+                        <TextBlock x:Name="PathText" Grid.Column="2"
+                                   Foreground="{DynamicResource Secondary}"
+                                   FontSize="11" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="DocumentInfo" Grid.Column="3"
+                                   Foreground="{DynamicResource Secondary}"
+                                   FontSize="11" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+```
+
+### 2.5.3 Styles/Controls.xaml：控件模板怎么画
+
+```xml
+<!-- 一个带键的按钮样式：只影响引用它的按钮 -->
+<Style x:Key="IconButton" TargetType="Button">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Template">
+        <Setter.Value>
+            <!-- ControlTemplate 决定按钮的“骨架” -->
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="Chrome"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="6">
+                    <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                </Border>
+                <!-- Trigger：鼠标悬停/按下时换背景 -->
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Chrome" Property="Background"
+                                Value="{DynamicResource Hover}" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="Chrome" Property="Background"
+                                Value="{DynamicResource Selected}" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+### 2.5.4 XAML 和 C# 是怎么对上的
+
+| XAML | C# | 对应方式 |
+| --- | --- | --- |
+| `x:Class="MokiPad.MainWindow"` | `public partial class MainWindow` | 编译时把 XAML 生成到同一个类 |
+| `x:Name="Tabs"` | `Tabs` 字段 | `InitializeComponent()` 生成字段并赋值 |
+| `Click="OnOpen"` | `private void OnOpen(object sender, RoutedEventArgs e)` | 事件签名匹配后自动挂接 |
+| `SelectionChanged="OnTabSelected"` | `OnTabSelected(object, SelectionChangedEventArgs)` | 事件处理器 |
+| `Tabs.ItemsSource = documents` | `ObservableCollection<DocumentTab> documents` | 代码后置设置数据源 |
+| `{Binding Name}` / `{Binding FilePath}` | `DocumentTab.Name` / `DocumentTab.FilePath` | 数据模板的当前项是 `DocumentTab` |
+| `PreviewHost.Child = preview` | `Border PreviewHost` | 代码把阅读器塞进 XAML 预留的空边框 |
+| `x:Name="HeaderTitle"` | `HeaderTitle.Text = tab.Name` | 代码直接改控件属性 |
+| `{DynamicResource Surface}` | `ThemeService.Apply` 里的 `Resources["Surface"]` | 资源键对应画刷 |
+| `{DynamicResource L.File}` | `UiText.Get("File")` | 资源键对应文案 |
+
+### 2.5.5 这个项目算 MVVM 吗
+
+不算严格 MVVM，它是 **XAML View + 代码后置 + 数据模型**：
+
+- **View（V）**：`MainWindow.xaml`、`Styles/Controls.xaml`、数据模板；
+- **Model（M）**：`DocumentTab`、`PreviewBlock`、`MarkdownResult`、`LoadedFile`；
+- **ViewModel（VM）**：没有单独的 VM 层；窗口代码后置直接持有 `documents`、`active`、`preferences`、`preview` 并操作控件。
+
+为什么不强行 MVVM：
+
+- 阅读器需要大量命令式操作：滚动位置、虚拟化容器、鼠标选择、剪贴板；
+- 单窗口小应用，VM 会带来大量样板；
+- 列表数据仍然通过绑定显示（`ItemsSource`、`DataTemplate`），不是完全手写 UI。
+
+严格 MVVM 会是什么样：
+
+```text
+MainWindow.xaml（V）
+  → 绑定 MainWindowViewModel（VM）
+    → ObservableCollection<DocumentTab>（M）
+    → ICommand OpenCommand / CloseCommand
+    → SelectedTab、StatusText
+```
+
+当前项目的实际结构：
+
+```text
+MainWindow.xaml（V）
+  → MainWindow.xaml.cs（视图逻辑，直接操作控件）
+    → Preferences / ThemeService / UiText（服务）
+    → DocumentTab / PreviewBlock（模型）
+```
+
+所以：
+- **V 是 XAML**，不是“没有 V”；
+- 代码后置不是 VM，它是 View 的代码部分；
+- 如果以后要 MVVM，先抽 `MainWindowViewModel`，把 `documents`、`active`、命令、状态文本放进去，XAML 改成绑定 VM。
+
+---
+
 ## 3. 启动与窗口
 
 **文件**：`src/MokiPad/App.xaml.cs`
