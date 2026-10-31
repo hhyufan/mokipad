@@ -1,0 +1,6 @@
+﻿root = true
+
+[*.cs]
+# Rider's out-of-process compiler does not run the regex source generator reliably;
+# keep hand-written compiled Regex fields instead of [GeneratedRegex] partial methods.
+dotnet_diagnostic.SYSLIB1045.severity = none

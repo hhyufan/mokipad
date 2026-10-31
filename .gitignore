@@ -1,0 +1,21 @@
+# 构建产物
+**/bin/
+**/obj/
+
+# 本地缓存与备份
+.cache/
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+
+# 测试与调试产物：只保留文档引用的少量报告
+artifacts/*
+!artifacts/inspectcode.html
+!artifacts/inspectcode.xml
+!artifacts/verification.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
