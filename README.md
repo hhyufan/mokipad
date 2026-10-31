@@ -10,6 +10,8 @@ MokiDown 的原生 Windows Markdown 阅读器。沿用 MokiDown 的蓝色、明�
 
 解决方案结构、项目依赖、构建方式与 InspectCode 检查摘要见 [docs/solution.html](docs/solution.html)；逐条规则的处理说明、原因与完整 diff 见 [docs/code-quality-report.html](docs/code-quality-report.html)；按修改类型整理的 Markdown（含改前/改后代码）见 [docs/code-cleanup-changes.md](docs/code-cleanup-changes.md)。
 
+第一次接触 WPF 或 C# 的读者，从 [docs/beginner-guide.md](docs/beginner-guide.md) 开始；配套知识树是 [docs/beginner-guide.mgtree](docs/beginner-guide.mgtree)，用 MokiDown 打开可按键浏览章节和代码示例。
+
 ## 运行
 
 需要 Windows 10/11 与 .NET 10 SDK。可用 Visual Studio 或 Rider 打开 `MokiPad.sln`（新版 IDE 也支持 `MokiPad.slnx`），或在项目目录执行：
