@@ -1,0 +1,36 @@
+MokiPad 逐行注释版代码导读
+  1. 完整文件架构
+  2. 功能模块表
+  3. 启动与窗口
+    App 入口 >csharp[1]
+    主窗口构造 >csharp[2]
+  4. 文件读取与编码
+    FileService.ReadAsync >csharp[3]
+  5. Markdown 解析
+    Pipeline 与 Parse >csharp[4]
+    块分发 >csharp[5]
+  6. 阅读列表与滚动
+    构造函数 >csharp[6]
+    滚轮入口 >csharp[7]
+  7. 块渲染
+    BlockPresenter.Render >csharp[8]
+  8. HTML 行内
+    AddText >csharp[9]
+  9. 图片与 SVG
+    LoadAsync >csharp[10]
+    DecodeBitmap >csharp[11]
+  10. GIF 播放
+    DecodeAsync >csharp[12]
+  11. 数学公式
+    Rebuild >csharp[13]
+  12. 选择与复制
+    Selection >csharp[14]
+  13. 主题与字体
+    ThemeService.Apply >csharp[15]
+  14. 设置与本地化
+    Preferences.Load >csharp[16]
+  15. 菜单与快捷键
+    BindKeys >csharp[17]
+  16. 验证
+    Main >csharp[18]
+  17. 知识树对应
