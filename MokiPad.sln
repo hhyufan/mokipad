@@ -1,0 +1,45 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8EE2B8B1-1E61-468A-A2AF-A8AB2C4CC0BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AAD3B477-9B25-406D-A708-029F38163321}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MokiPad", "src\MokiPad\MokiPad.csproj", "{8F6DEAA4-0B1B-452D-8E40-938066D91FFF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MokiPad.Core", "src\MokiPad.Core\MokiPad.Core.csproj", "{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MokiPad.Verification", "tests\MokiPad.Verification\MokiPad.Verification.csproj", "{599482A7-9A02-48C3-8CFA-DE9AFA8D993B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8F6DEAA4-0B1B-452D-8E40-938066D91FFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F6DEAA4-0B1B-452D-8E40-938066D91FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F6DEAA4-0B1B-452D-8E40-938066D91FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F6DEAA4-0B1B-452D-8E40-938066D91FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{599482A7-9A02-48C3-8CFA-DE9AFA8D993B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{599482A7-9A02-48C3-8CFA-DE9AFA8D993B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{599482A7-9A02-48C3-8CFA-DE9AFA8D993B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{599482A7-9A02-48C3-8CFA-DE9AFA8D993B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8F6DEAA4-0B1B-452D-8E40-938066D91FFF} = {8EE2B8B1-1E61-468A-A2AF-A8AB2C4CC0BA}
+		{F6DA541E-5DCD-427A-AD90-EC54F2F4ECDE} = {8EE2B8B1-1E61-468A-A2AF-A8AB2C4CC0BA}
+		{599482A7-9A02-48C3-8CFA-DE9AFA8D993B} = {AAD3B477-9B25-406D-A708-029F38163321}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8E8637F2-B2E5-46EC-8525-DA1C3BEF3425}
+	EndGlobalSection
+EndGlobal

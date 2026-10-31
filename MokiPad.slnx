@@ -1,0 +1,4 @@
+<Solution>
+  <Folder Name="/src/"><Project Path="src/MokiPad/MokiPad.csproj"/><Project Path="src/MokiPad.Core/MokiPad.Core.csproj"/></Folder>
+  <Folder Name="/tests/"><Project Path="tests/MokiPad.Verification/MokiPad.Verification.csproj"/></Folder>
+</Solution>
